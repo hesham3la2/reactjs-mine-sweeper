@@ -1,38 +1,89 @@
 .App {
+  height: 100vh;
   text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  background-color: #dfeffe;
 }
 
-.App-link {
-  color: #61dafb;
+.container {
+  margin: auto;
+  padding: 10px;
+  background-color: #374353;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.header {
+  height: 60px;
+  background: wheat;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  border-top: 23px #ffffff4f;
+  border-left: 23px #ffffff8c;
+}
+
+.board {
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.cell {
+  box-sizing: border-box;
+  line-height: 25px;
+  height: auto;
+  padding: 1px;
+  border: 0.5px solid rgb(106 106 106);
+  background-color: rgb(192 192 192);
+}
+
+.cell__img {
+  height: auto;
+  width: 70%;
+  object-fit: contain;
+}
+
+.cell--closed {
+  border-top: 2px solid rgb(255, 255, 255);
+  border-left: 2px solid rgb(255, 255, 255);
+  border-bottom: 2px solid rgb(0, 0, 0);
+  border-right: 2px solid rgb(0, 0, 0);
+}
+
+.cell::before {
+  content: '';
+  float: left;
+  padding-top: 100%;
+}
+
+.no_selection {
+  user-select: none; /* standard syntax */
+  -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+  -moz-user-select: none; /* mozilla browsers */
+  -khtml-user-select: none; /* webkit (konqueror) browsers */
+  -ms-user-select: none; /* IE10+ */
+}
+
+.mine-clicked {
+  background-color: red;
+}
+
+.wrong-flag {
+  background-color: rgb(225, 0, 255);
+}
+
+.cell__color-1 {
+  color: green;
+}
+.cell__color-2 {
+  color: rgb(0, 2, 128);
+}
+.cell__color-3 {
+  color: rgb(128, 126, 0);
+}
+.cell__color-4 {
+  color: rgb(128, 94, 0);
+}
+.cell__color-5 {
+  color: rgb(113, 0, 128);
 }
