@@ -1,11 +1,12 @@
 import { useEffect, useState, ChangeEvent } from 'react';
-import { LevelOptions, GameStatus } from '../enums';
+import { LevelOptions, GameStatus, ClickType } from '../enums';
 import Cell, { CellData } from './Cell';
+import Emoji from './Emoji';
 import LevelSelector, { Levels } from './LevelSelector';
 
 interface Difficulty {
-  cols: number;
-  rows: number;
+  numberOfCols: number;
+  numberOfRows: number;
   numOfMines: number;
   level: LevelOptions;
 }
@@ -15,93 +16,96 @@ function Game() {
     ...Levels[LevelOptions.Easy],
     level: LevelOptions.Easy,
   });
-  const [cells, setCells] = useState<CellData[]>([]);
+  const [grid, setGrid] = useState<CellData[][]>([]);
   const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.Active);
-  const { cols, rows, numOfMines, level } = difficulty;
+  const { numberOfCols, numberOfRows, numOfMines, level } = difficulty;
 
   useEffect(() => {
     startNewGame();
   }, [level]);
 
-  const containerWidth = cols * 25.1 + 20;
+  const rowWidth = numberOfCols * 30;
 
   const startNewGame = () => {
-    const _cells: CellData[] = [];
-
-    for (let i = 0; i < rows * cols; i++) {
-      _cells.push({
-        value: 0,
-        isOpen: false,
-        isFlagged: false,
-        hasMine: false,
-      });
+    let grid: CellData[][] = [];
+    for (let i = 0; i < numberOfRows; i++) {
+      let rows: CellData[] = [];
+      grid.push(rows);
+      for (let j = 0; j < numberOfCols; j++) {
+        rows.push({
+          value: 0,
+          isOpen: false,
+          isFlagged: false,
+          hasMine: false,
+        });
+      }
     }
 
-    let randomMines: number[] = [];
+    let randomMines: [number, number][] = [];
     while (randomMines.length < numOfMines) {
-      let randomNum = Math.floor(Math.random() * rows * cols);
+      let randomX = Math.floor(Math.random() * numberOfRows);
+      let randomY = Math.floor(Math.random() * numberOfCols);
 
-      if (!randomMines.includes(randomNum)) {
-        randomMines.push(randomNum);
+      if (
+        !randomMines.some(([x, y]) => {
+          return randomX == x && randomY == y;
+        })
+      ) {
+        randomMines.push([randomX, randomY]);
 
-        const currentCell = _cells[randomNum];
+        grid[randomX][randomY].hasMine = true;
 
-        currentCell.hasMine = true;
-        const neighboursIndex = loopNeighbours(randomNum);
+        const neighbours = loopNeighbours(randomX, randomY);
 
-        neighboursIndex.map((neighbour) => {
-          !_cells[neighbour].hasMine && _cells[neighbour].value++;
+        neighbours.map(([x, y]) => {
+          !grid[x][y].hasMine && grid[x][y].value++;
         });
       }
 
-      setCells(_cells);
+      setGrid(grid);
     }
   };
 
-  const loopNeighbours = (index: number): number[] => {
-    const currentX = index == 0 ? 1 : Math.ceil(index / cols);
-
-    const currentY = index > cols ? index % cols : (index == 0 ? 1 : index);
-
-    const neighbours: number[] = [];
+  const loopNeighbours = (x: number, y: number): [number, number][] => {
+    const neighbours: [number, number][] = [];
     //Top
-    if (currentX > 1) {
-      neighbours.push(index - cols);
+    if (x > 0) {
+      neighbours.push([x - 1, y]);
     }
 
     //Bottom
-    if (currentX < rows - 1) {
-      neighbours.push(index + cols);
+    if (x < numberOfRows - 1) {
+      neighbours.push([x + 1, y]);
     }
 
     //Right
-    if (currentY < cols - 1) {
-      neighbours.push(index + 1);
+    if (y < numberOfCols - 1) {
+      neighbours.push([x, y + 1]);
     }
 
     //Left
-    if (currentY > 1) {
-      neighbours.push(index - 1);
+    if (y > 0) {
+      neighbours.push([x, y - 1]);
     }
 
     //Top Right
-    if (currentY < cols - 1 && currentX > 1) {
-      neighbours.push(index - cols + 1);
+    if (y < numberOfCols - 1 && x > 0) {
+      neighbours.push([x - 1, y + 1]);
     }
 
     //Top Left
-    if (currentY > 1 && currentX > 1) {
-      neighbours.push(index - cols - 1);
+    if (y > 0 && x > 0) {
+      neighbours.push([x - 1, y - 1]);
     }
 
     //Bottom Right
-    if (currentY < cols - 1 && currentX < rows - 1) {
-      neighbours.push(index + cols + 1);
+    if (y < numberOfCols - 1 && x < numberOfRows - 1) {
+      neighbours.push([x + 1, y + 1]);
     }
 
     //Bottom Left
-    if (currentY > 1 && currentX < rows - 1) {
-      neighbours.push(index + cols - 1);
+    if (y > 0 && x < numberOfRows - 1) {
+      neighbours.push([x + 1, y - 1]);
     }
 
     return neighbours;
@@ -114,77 +118,128 @@ function Game() {
       ...Levels[selected],
       level: selected,
     });
+    setGameStatus(GameStatus.Active);
   };
 
-  const updateCellData = (index: number, newCell: CellData): void => {
-    if (gameStatus == GameStatus.Active) {
-      let openCellCounter = 0;
-      let emptyNeighbous = [];
+  const updateCellData = (
+    location: [number, number],
+    newCell: CellData,
+    clickType: ClickType 
+  ): void => {
+    // win
 
-      let _cells = cells.map((_cell, i) => {
-        if (i == index) {
-          if (newCell.isOpen) openCellCounter++;
-          return newCell;
-        }
-        return _cell;
-      });
+    function propagateOpening(
+      location: [number, number],
+      collection: [number, number][] = []
+    ) {
+      let [x, y] = location;
+      let deepNeighbours: [number, number][] = [];
+      let filteredCollection: [number, number][] = [];
+      let newCollection = loopNeighbours(x, y);
 
-      const openingSpreed = (
-        index: number,
-        parentNeighbours: number[] = []
-      ) => {
-        let myNeighbours = loopNeighbours(index);
+      filteredCollection = newCollection.filter(
+        ([newX, newY]) =>
+          !collection.some(([collX, collY]) => newX == collX && newY == collY)
+      );
 
-        let filteredNeighbours = myNeighbours.filter(
-          (x) => !parentNeighbours.includes(x)
-        );
-
-        for (let i = 0; i < filteredNeighbours.length; i++) {
-          let neighbour = filteredNeighbours[i];
-
-          _cells[neighbour].isOpen = true;
-        //   console.log({value:_cells[neighbour].value,filteredNeighbours});
-          if (_cells[neighbour].value == 0) {
-            openingSpreed(neighbour, [
-              ...filteredNeighbours,
-              ...parentNeighbours
-            ]);
-          }
-        }
-      };
-      if (!newCell.isFlagged && !newCell.hasMine && newCell.value == 0) {
-        openingSpreed(index, [index]);
+      for (let i = 0; i < filteredCollection.length; i++) {
+        const [filX, filY] = filteredCollection[i];
+        let neighbour = grid[filX][filY];
+        if (neighbour.value == 0)
+          deepNeighbours = deepNeighbours.concat(
+            propagateOpening(
+              [filX, filY],
+              [...collection, ...filteredCollection]
+            )
+          );
       }
 
-      if (!newCell.isFlagged && newCell.hasMine == true) {
-        _cells[index].value = -1;
+      return [...filteredCollection, ...deepNeighbours];
+    }
+
+    if (gameStatus == GameStatus.Active) {
+      let openCellCounter = 0;
+      let emptyNeighbours: [number, number][] = [];
+      let [x, y] = location;
+
+      if ((clickType == ClickType.LT) && !newCell.hasMine && newCell.value == 0) {
+        emptyNeighbours = [location, ...propagateOpening(location)];
+      }
+
+      if((clickType == ClickType.LT) && newCell.value > 0) openCellCounter++;
+
+      let _grid = grid.map((row, currentX) => {
+        return row.map((cell, currentY) => {
+            if(cell.isOpen) openCellCounter++
+
+          if (emptyNeighbours.length) {
+            if (
+              emptyNeighbours.some(
+                ([empX, empY]) => empX == currentX && empY == currentY
+              )
+            ) {
+                openCellCounter++
+              return { ...cell, isOpen: true };
+            }
+            return cell;
+          } else {
+            return x == currentX && y == currentY ? newCell : cell;
+          }
+        });
+      });
+
+      if ((clickType == ClickType.LT) && newCell.hasMine) {
         setGameStatus(GameStatus.Fail);
       } else if (
-        !newCell.isFlagged &&
-        openCellCounter == _cells.length - numOfMines
+        (clickType == ClickType.LT) &&
+        openCellCounter == numberOfCols * numberOfRows - numOfMines
       ) {
+          
         setGameStatus(GameStatus.Win);
       }
 
-      setCells(_cells);
+      setGrid(_grid);
     }
   };
 
+  let emoji = () => {
+    switch (gameStatus) {
+        case GameStatus.Win:
+            return '🥳'
+        case GameStatus.Fail:
+            return '💩'
+        case GameStatus.Active:
+            return '🤔'
+        case GameStatus.Paused:
+            return '😴'
+    }
+  }
+
   return (
-    <div className="container" style={{ maxWidth: containerWidth }}>
+    <div className="container" style={{ maxWidth: rowWidth + 20 }}>
       <div className="header">
         <LevelSelector onChange={handleChange} level={level} />
-      </div>
-      <div className="board">
-        {cells.map((cell, index) => (
-          <Cell
-            key={index}
-            id={index}
-            cellWidth={100 / cols}
-            isDisabled={gameStatus == GameStatus.Fail}
-            updateCell={updateCellData}
-            cell={cell}
+        <div className="emoji">
+          <Emoji
+            label="Win"
+            symbol={emoji()}
           />
+        </div>
+      </div>
+      <div className="board no_selection" style={{ minWidth: rowWidth }}>
+        {grid.map((row, x) => (
+          <div key={x} className="row">
+            {row.map((cell, y) => (
+              <Cell
+                key={`${x}-${y}`}
+                location={[x, y]}
+                cellWidth={100 / numberOfCols}
+                isDisabled={gameStatus == GameStatus.Fail}
+                updateCell={updateCellData}
+                cell={cell}
+              />
+            ))}
+          </div>
         ))}
       </div>
     </div>

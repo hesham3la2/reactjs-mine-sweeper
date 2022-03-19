@@ -2,18 +2,18 @@ import {LevelOptions} from '../enums';
 
 export const Levels = {
     [LevelOptions.Easy]: {
-        cols: 9,
-        rows: 9,
+        numberOfCols: 9,
+        numberOfRows: 9,
         numOfMines: 10,
     },
     [LevelOptions.Intermediate]: {
-        cols: 16,
-        rows: 16,
+        numberOfCols: 16,
+        numberOfRows: 16,
         numOfMines: 40
     },
     [LevelOptions.Expert]: {
-        cols: 30,
-        rows: 16,
+        numberOfCols: 30,
+        numberOfRows: 16,
         numOfMines: 99
     }
 }

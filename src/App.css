@@ -24,36 +24,38 @@
 
 .board {
   cursor: pointer;
-  display: flex;
-  flex-wrap: wrap;
+}
+
+.row {
+  line-height: 0;
 }
 
 .cell {
+  position: relative;
   box-sizing: border-box;
   line-height: 25px;
-  height: auto;
-  padding: 1px;
-  border: 0.5px solid rgb(106 106 106);
-  background-color: rgb(192 192 192);
+  height: 30px;
+  width: 30px;
+  border: 1.5px solid rgb(169 169 169);
+  background-color: rgb(175 175 175);
+  display: inline-block;
+  overflow: hidden;
 }
 
 .cell__img {
   height: auto;
-  width: 70%;
-  object-fit: contain;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .cell--closed {
-  border-top: 2px solid rgb(255, 255, 255);
-  border-left: 2px solid rgb(255, 255, 255);
-  border-bottom: 2px solid rgb(0, 0, 0);
-  border-right: 2px solid rgb(0, 0, 0);
-}
-
-.cell::before {
-  content: '';
-  float: left;
-  padding-top: 100%;
+  background-color: rgb(192 192 192);
+  border-top: 1.5px solid rgb(255, 255, 255);
+  border-left: 1.5px solid rgb(255, 255, 255);
+  border-bottom: 1.5px solid rgb(0, 0, 0);
+  border-right: 1.5px solid rgb(0, 0, 0);
 }
 
 .no_selection {
@@ -64,12 +66,16 @@
   -ms-user-select: none; /* IE10+ */
 }
 
+.emoji {
+  font-size: 1.5rem;
+}
+
 .mine-clicked {
   background-color: red;
 }
 
 .wrong-flag {
-  background-color: rgb(225, 0, 255);
+  background-color: rgb(255 178 178);
 }
 
 .cell__color-1 {
