@@ -1,76 +1,68 @@
+import { useContext } from 'react';
 import clsx from 'clsx';
-import {ClickType} from '../enums'
+import { useMain } from '../context/MainContextProvider';
+import { ActionTypes, GameStatus } from '../context/enums';
 import mine from '../mine.png';
 import flag from '../flag.png';
+import { CellData } from '../context/interfaces';
 
-export interface CellData {
-  value: number;
-  isOpen: boolean;
-  isFlagged: boolean;
-  hasMine: boolean;
-}
-
-interface CellProps {
-  location: [number, number];
-  cell: CellData;
-  cellWidth: number;
-  isDisabled: boolean;
-  updateCell: (location: [number, number], newCell: CellData, clickType: ClickType) => void;
-}
-
-function Cell(props: CellProps) {
-  const { isDisabled, cellWidth, cell, location, updateCell } = props;
+function Cell(props: { cell: CellData }) {
+  const { state, dispatch } = useMain();
+  const { id, value, isOpen, isFlagged, hasMine } = props.cell;
 
   const handleRTClick = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
 
-    if (cell.isOpen) return;
+    if (isOpen || state.gameStatus !== GameStatus.Active) return;
 
-    let newCell: CellData = { ...cell };
-
-    newCell.isFlagged = !cell.isFlagged;
-    updateCell(location, newCell, ClickType.RT);
+    dispatch({ type: ActionTypes.TOGGLEFLAG, payload: id });
   };
 
   const handleLTClick = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
 
-    if (cell.isOpen || cell.isFlagged) return;
+    if (isOpen || state.gameStatus !== GameStatus.Active || isFlagged) return;
 
-    let newCell: CellData = { ...cell };
+    if (hasMine) {
+      dispatch({ type: ActionTypes.MINECLICK, payload: id });
+      return;
+    }else if(value > 0){
+      dispatch({type: ActionTypes.CELLWITHVALUECLICKED, payload: id})
+    }else{
+      dispatch({type: ActionTypes.EMPTYCELLCLICKED, payload: id})
+    }
 
-    newCell.isOpen = true;
-    if (newCell.hasMine) newCell.value = -1;
-    updateCell(location, newCell, ClickType.LT);
+    // let newCell: CellData = { ...cell };
+
+    // newCell.isOpen = true;
+    // if (newCell.hasMine) newCell.value = -1;
+    // updateCell(location, newCell, ClickType.LT);
   };
 
   return (
     <div
       className={clsx(
         'cell',
-        !cell.isOpen && 'cell--closed',
-        cell.isOpen && cell.value > 0 && `cell__color-${cell.value}`,
-        cell.isOpen &&
-          cell.hasMine &&
-          isDisabled &&
-          cell.value == -1 &&
-          'mine-clicked',
-        cell.isFlagged && !cell.hasMine && isDisabled && 'wrong-flag'
+        !isOpen && 'cell--closed',
+        isOpen && value > 0 && `cell__color-${value}`,
+        isOpen && hasMine && value == -1 && 'mine-clicked',
+        isFlagged &&
+          !hasMine &&
+          state.gameStatus == GameStatus.Fail &&
+          'wrong-flag'
       )}
       onClick={handleLTClick}
       onContextMenu={handleRTClick}
     >
-
-      {cell.isOpen ? (
-        cell.hasMine ? (
+      {isOpen ? (
+        hasMine ? (
           <img className="cell__img" src={mine} />
         ) : (
-          cell.value > 0 && <span> {cell.value} </span>
+          value > 0 && <span> {value} </span>
         )
       ) : (
-        cell.isFlagged && <img className="cell__img" src={flag} />
+        isFlagged && <img className="cell__img" src={flag} />
       )}
-
     </div>
   );
 }

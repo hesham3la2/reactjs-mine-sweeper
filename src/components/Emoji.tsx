@@ -1,6 +1,6 @@
 interface EmojiProps {
     label: string;
-    symbol: string
+    symbol: string | undefined
 }
 
 function Emoji(props: EmojiProps) {
@@ -12,7 +12,7 @@ function Emoji(props: EmojiProps) {
             aria-hidden={props.label ? "false" : "true"}
         >
 
-        {props.symbol}
+        {props.symbol || props.symbol }
     
         </span>
     )

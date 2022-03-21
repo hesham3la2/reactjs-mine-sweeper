@@ -1,246 +1,83 @@
-import { useEffect, useState, ChangeEvent } from 'react';
-import { LevelOptions, GameStatus, ClickType } from '../enums';
-import Cell, { CellData } from './Cell';
+import { useEffect, ChangeEvent, useContext } from 'react';
+import { useMain } from '../context/MainContextProvider';
+import { ActionTypes, LevelOptions, GameStatus } from '../context/enums';
+import Cell from './Cell';
 import Emoji from './Emoji';
-import LevelSelector, { Levels } from './LevelSelector';
-
-interface Difficulty {
-  numberOfCols: number;
-  numberOfRows: number;
-  numOfMines: number;
-  level: LevelOptions;
-}
+import LevelSelector from './LevelSelector';
+import Row from './Row';
 
 function Game() {
-  const [difficulty, setDifficulty] = useState<Difficulty>({
-    ...Levels[LevelOptions.Easy],
-    level: LevelOptions.Easy,
-  });
-  const [grid, setGrid] = useState<CellData[][]>([]);
-  const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.Active);
-  const { numberOfCols, numberOfRows, numOfMines, level } = difficulty;
+  const { state, dispatch } = useMain();
+
+  const { level, grid, gameStatus } = state;
 
   useEffect(() => {
-    startNewGame();
-  }, [level]);
+    dispatch({ type: ActionTypes.NEWGAME, payload: level });
+  }, []);
 
-  const rowWidth = numberOfCols * 30;
+  useEffect(() => {
+    // window.addEventListener('focus', onFocus);
+    window.addEventListener('blur', onBlur);
 
-  const startNewGame = () => {
-    let grid: CellData[][] = [];
-    for (let i = 0; i < numberOfRows; i++) {
-      let rows: CellData[] = [];
-      grid.push(rows);
-      for (let j = 0; j < numberOfCols; j++) {
-        rows.push({
-          value: 0,
-          isOpen: false,
-          isFlagged: false,
-          hasMine: false,
-        });
-      }
-    }
+    return () => {
+      // window.removeEventListener('focus', onFocus);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, []);
 
-    let randomMines: [number, number][] = [];
-    while (randomMines.length < numOfMines) {
-      let randomX = Math.floor(Math.random() * numberOfRows);
-      let randomY = Math.floor(Math.random() * numberOfCols);
+  // const onFocus = () => {
+  //   console.log('focus');
+  // };
 
-      if (
-        !randomMines.some(([x, y]) => {
-          return randomX == x && randomY == y;
-        })
-      ) {
-        randomMines.push([randomX, randomY]);
-
-        grid[randomX][randomY].hasMine = true;
-
-        const neighbours = loopNeighbours(randomX, randomY);
-
-        neighbours.map(([x, y]) => {
-          !grid[x][y].hasMine && grid[x][y].value++;
-        });
-      }
-
-      setGrid(grid);
-    }
+  const onBlur = () => {
+    dispatch({type: ActionTypes.GAMEPAUSED})
   };
-
-  const loopNeighbours = (x: number, y: number): [number, number][] => {
-    const neighbours: [number, number][] = [];
-    //Top
-    if (x > 0) {
-      neighbours.push([x - 1, y]);
-    }
-
-    //Bottom
-    if (x < numberOfRows - 1) {
-      neighbours.push([x + 1, y]);
-    }
-
-    //Right
-    if (y < numberOfCols - 1) {
-      neighbours.push([x, y + 1]);
-    }
-
-    //Left
-    if (y > 0) {
-      neighbours.push([x, y - 1]);
-    }
-
-    //Top Right
-    if (y < numberOfCols - 1 && x > 0) {
-      neighbours.push([x - 1, y + 1]);
-    }
-
-    //Top Left
-    if (y > 0 && x > 0) {
-      neighbours.push([x - 1, y - 1]);
-    }
-
-    //Bottom Right
-    if (y < numberOfCols - 1 && x < numberOfRows - 1) {
-      neighbours.push([x + 1, y + 1]);
-    }
-
-    //Bottom Left
-    if (y > 0 && x < numberOfRows - 1) {
-      neighbours.push([x + 1, y - 1]);
-    }
-
-    return neighbours;
-  };
+  
+  const restoreGame = () => {
+    dispatch({type: ActionTypes.GAMERESTORED})
+  }
 
   const handleChange = (e: ChangeEvent<HTMLSelectElement>): void => {
     e.preventDefault();
     const selected: LevelOptions = parseInt(e.target.value);
-    setDifficulty({
-      ...Levels[selected],
-      level: selected,
-    });
-    setGameStatus(GameStatus.Active);
-  };
-
-  const updateCellData = (
-    location: [number, number],
-    newCell: CellData,
-    clickType: ClickType 
-  ): void => {
-    // win
-
-    function propagateOpening(
-      location: [number, number],
-      collection: [number, number][] = []
-    ) {
-      let [x, y] = location;
-      let deepNeighbours: [number, number][] = [];
-      let filteredCollection: [number, number][] = [];
-      let newCollection = loopNeighbours(x, y);
-
-      filteredCollection = newCollection.filter(
-        ([newX, newY]) =>
-          !collection.some(([collX, collY]) => newX == collX && newY == collY)
-      );
-
-      for (let i = 0; i < filteredCollection.length; i++) {
-        const [filX, filY] = filteredCollection[i];
-        let neighbour = grid[filX][filY];
-        if (neighbour.value == 0)
-          deepNeighbours = deepNeighbours.concat(
-            propagateOpening(
-              [filX, filY],
-              [...collection, ...filteredCollection]
-            )
-          );
-      }
-
-      return [...filteredCollection, ...deepNeighbours];
-    }
-
-    if (gameStatus == GameStatus.Active) {
-      let openCellCounter = 0;
-      let emptyNeighbours: [number, number][] = [];
-      let [x, y] = location;
-
-      if ((clickType == ClickType.LT) && !newCell.hasMine && newCell.value == 0) {
-        emptyNeighbours = [location, ...propagateOpening(location)];
-      }
-
-      if((clickType == ClickType.LT) && newCell.value > 0) openCellCounter++;
-
-      let _grid = grid.map((row, currentX) => {
-        return row.map((cell, currentY) => {
-            if(cell.isOpen) openCellCounter++
-
-          if (emptyNeighbours.length) {
-            if (
-              emptyNeighbours.some(
-                ([empX, empY]) => empX == currentX && empY == currentY
-              )
-            ) {
-                openCellCounter++
-              return { ...cell, isOpen: true };
-            }
-            return cell;
-          } else {
-            return x == currentX && y == currentY ? newCell : cell;
-          }
-        });
-      });
-
-      if ((clickType == ClickType.LT) && newCell.hasMine) {
-        setGameStatus(GameStatus.Fail);
-      } else if (
-        (clickType == ClickType.LT) &&
-        openCellCounter == numberOfCols * numberOfRows - numOfMines
-      ) {
-          
-        setGameStatus(GameStatus.Win);
-      }
-
-      setGrid(_grid);
-    }
+    dispatch({ type: ActionTypes.LEVELCHANGE, payload: selected });
   };
 
   let emoji = () => {
     switch (gameStatus) {
-        case GameStatus.Win:
-            return '🥳'
-        case GameStatus.Fail:
-            return '💩'
-        case GameStatus.Active:
-            return '🤔'
-        case GameStatus.Paused:
-            return '😴'
+      case GameStatus.Win:
+        return '🥳';
+      case GameStatus.Fail:
+        return '💩';
+      case GameStatus.Active:
+        return '🤔';
+      case GameStatus.Paused:
+        return '😴';
     }
-  }
+  };
 
   return (
-    <div className="container" style={{ maxWidth: rowWidth + 20 }}>
+    <div className="container">
       <div className="header">
-        <LevelSelector onChange={handleChange} level={level} />
+        <LevelSelector onChange={handleChange} level={level.name} />
         <div className="emoji">
-          <Emoji
-            label="Win"
-            symbol={emoji()}
-          />
+          <Emoji label="Win" symbol={emoji()} />
         </div>
+        <div>{state.usedFlags}</div>
       </div>
-      <div className="board no_selection" style={{ minWidth: rowWidth }}>
-        {grid.map((row, x) => (
-          <div key={x} className="row">
-            {row.map((cell, y) => (
-              <Cell
-                key={`${x}-${y}`}
-                location={[x, y]}
-                cellWidth={100 / numberOfCols}
-                isDisabled={gameStatus == GameStatus.Fail}
-                updateCell={updateCellData}
-                cell={cell}
-              />
-            ))}
-          </div>
-        ))}
+      <div className="board no_selection">
+        {grid.length &&
+          [...Array(level.numOfRows)].map((raw, i) => {
+            let start = i * level.numOfCols;
+            return (
+              <Row key={i}>
+                {grid.slice(start, start + level.numOfCols).map((cell, i) => (
+                  <Cell key={cell.id} cell={cell} />
+                ))}
+              </Row>
+            );
+          })}
+      {gameStatus == GameStatus.Paused && <div className="paused" onClick={() => restoreGame()}>Paused</div>}
       </div>
     </div>
   );

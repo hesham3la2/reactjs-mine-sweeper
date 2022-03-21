@@ -3,15 +3,13 @@ export enum ClickType {
     LT
 }
 
-export enum LevelOptions {
-    Easy,
-    Intermediate,
-    Expert
-}
 
-export enum GameStatus {
-    Active,
-    Win,
-    Fail,
-    Paused
+
+export enum ActionTypes {
+    ToggleFlag = 'toggleFlag',
+    MineClicked = 'MineClicked',
+    OpenCellWithNumber = 'OpenCellWithNumber',
+    OpenEmptyCells = 'OpenEmptyCells',
+    LevelChange = 'LevelChange',
+    NewGame = 'NewGame'
 }

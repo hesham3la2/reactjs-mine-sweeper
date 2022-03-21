@@ -1,27 +1,4 @@
-import {LevelOptions} from '../enums';
-
-export const Levels = {
-    [LevelOptions.Easy]: {
-        numberOfCols: 9,
-        numberOfRows: 9,
-        numOfMines: 10,
-    },
-    [LevelOptions.Intermediate]: {
-        numberOfCols: 16,
-        numberOfRows: 16,
-        numOfMines: 40
-    },
-    [LevelOptions.Expert]: {
-        numberOfCols: 30,
-        numberOfRows: 16,
-        numOfMines: 99
-    }
-}
-
-interface LevelSelectorProps {
-    level: LevelOptions,
-    onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
-}
+import {LevelSelectorProps} from '../context/interfaces';
 
 function LevelSelector(props: LevelSelectorProps) {
 
