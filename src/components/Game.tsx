@@ -61,7 +61,7 @@ function Game() {
 
   const alert = useAlert();
   if (state.gameStatus == GameStatus.WinWithRecord)
-    alert.show('Oh look, an alert!', { type: 'success' });
+    alert.show('CONGRATULATIONS! NEW RECORD!', { type: 'success' });
 
   return (
     <div className="container">
