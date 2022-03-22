@@ -7,6 +7,9 @@ export enum ActionTypes {
   CELLWITHVALUECLICKED = 'CELLWITHVALUECLICKED',
   GAMEPAUSED = 'GAMEPAUSED',
   GAMERESTORED = 'GAMERESTORED',
+  RESTARTGAME = 'RESTARTGAME',
+  SECSICREMENT = 'SECSICREMENT',
+  TIMERSTART = 'TIMERSTART',
 }
 
 export enum LevelOptions {
@@ -20,4 +23,5 @@ export enum GameStatus {
   Win,
   Fail,
   Paused,
+  WinWithRecord
 }

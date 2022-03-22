@@ -7,10 +7,8 @@ export const toogleFlag = (state: State, payload: string): State => {
   const _grid = state.grid.map((cell) => {
     let _cell = { ...cell };
     if (cell.id == payload) {
-      if (_cell.isFlagged) 
-        usedFlagsCounter++;
-      else 
-        usedFlagsCounter--;
+      if (_cell.isFlagged) usedFlagsCounter++;
+      else usedFlagsCounter--;
 
       _cell.isFlagged = !cell.isFlagged;
     }
@@ -40,7 +38,6 @@ export const mineClicked = (grid: CellData[], payload: string): CellData[] => {
 };
 
 export const cellWithValueClicked = (state: State, payload: string): State => {
-  const { numOfCols, numOfMines, numOfRows } = state.level;
   let counter = state.openedCells;
   const _grid = state.grid.map((cell) => {
     let _cell = { ...cell };
@@ -51,18 +48,11 @@ export const cellWithValueClicked = (state: State, payload: string): State => {
     return { ..._cell };
   });
 
-  const nonMineCells = numOfCols * numOfRows - numOfMines;
-
-  return {
-    ...state,
-    openedCells: counter,
-    gameStatus: nonMineCells == counter ? GameStatus.Win : GameStatus.Active,
-    grid: _grid,
-  };
+  return stateBuilder(state, counter, _grid);
 };
 
 export const emptyCellClicked = (state: State, payload: string): State => {
-  const { numOfCols, numOfRows, numOfMines } = state.level;
+  const { numOfCols, numOfRows } = state.level;
   let counter = state.openedCells;
 
   function propagateOpening(id: string, collection: string[] = []) {
@@ -110,12 +100,41 @@ export const emptyCellClicked = (state: State, payload: string): State => {
     }
   });
 
+  return stateBuilder(state, counter, _grid);
+};
+
+const stateBuilder = (state: State, counter: number, grid: CellData[]) => {
+  const { numOfCols, numOfRows, numOfMines } = state.level;
   const nonMineCells = numOfCols * numOfRows - numOfMines;
 
-  return {
+  let bestScore = state.score[state.level.name];
+  if (
+    nonMineCells == counter &&
+    state.timer.seconds < state.score[state.level.name]
+  ) {
+    bestScore = state.timer.seconds;
+  }
+
+  const newState = {
     ...state,
+    score: {
+      ...state.score,
+      [state.level.name]: bestScore,
+    },
+    timer: {
+      ...state.timer,
+      isActive: nonMineCells !== counter,
+    },
     openedCells: counter,
-    gameStatus: nonMineCells == counter ? GameStatus.Win : GameStatus.Active,
-    grid: _grid,
+    gameStatus:
+      nonMineCells == counter
+        ? state.timer.seconds < state.score[state.level.name]
+          ? GameStatus.WinWithRecord
+          : GameStatus.Win
+        : GameStatus.Active,
+    grid,
   };
+  localStorage.setItem('score', JSON.stringify(newState.score));
+
+  return newState;
 };

@@ -5,7 +5,7 @@ function LevelSelector(props: LevelSelectorProps) {
     const { onChange, level} = props;
 
     return (
-        <select onChange={onChange} value={level}>
+        <select className='header-item' onChange={onChange} value={level}>
           <option value="0">Beginner</option>
           <option value="1">Intermediate</option>
           <option value="2">Expert</option>

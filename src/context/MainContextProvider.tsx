@@ -7,12 +7,24 @@ const MainStateContext = createContext<
   { state: State; dispatch: Dispatch } | undefined
 >(undefined);
 
+const savedScore = localStorage.getItem('score');
+const score = savedScore ? JSON.parse(savedScore) : {
+  [LevelOptions.Easy]: 999,
+  [LevelOptions.Intermediate]: 999,
+  [LevelOptions.Expert]: 999,
+};
+
 const initialState: State = {
   usedFlags: 0,
   openedCells: 0,
   level: Levels[LevelOptions.Easy],
   gameStatus: GameStatus.Active,
-  grid: []
+  grid: [],
+  timer: {
+    isActive: false,
+    seconds: 0,
+  },
+  score
 }
 
 

@@ -1,4 +1,3 @@
-import { useContext } from 'react';
 import clsx from 'clsx';
 import { useMain } from '../context/MainContextProvider';
 import { ActionTypes, GameStatus } from '../context/enums';
@@ -23,6 +22,9 @@ function Cell(props: { cell: CellData }) {
 
     if (isOpen || state.gameStatus !== GameStatus.Active || isFlagged) return;
 
+    if(!hasMine && state.openedCells == 0)
+      dispatch({type: ActionTypes.TIMERSTART})
+
     if (hasMine) {
       dispatch({ type: ActionTypes.MINECLICK, payload: id });
       return;
@@ -31,14 +33,9 @@ function Cell(props: { cell: CellData }) {
     }else{
       dispatch({type: ActionTypes.EMPTYCELLCLICKED, payload: id})
     }
-
-    // let newCell: CellData = { ...cell };
-
-    // newCell.isOpen = true;
-    // if (newCell.hasMine) newCell.value = -1;
-    // updateCell(location, newCell, ClickType.LT);
   };
 
+ 
   return (
     <div
       className={clsx(

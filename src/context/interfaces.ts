@@ -32,6 +32,15 @@ export interface State {
   level: LevelData;
   gameStatus: GameStatus;
   grid: CellData[];
+  timer: {
+    isActive: boolean;
+    seconds: number;
+  },
+  score:{
+    [LevelOptions.Easy]: number,
+    [LevelOptions.Intermediate]: number,
+    [LevelOptions.Expert]: number,
+  }
 }
 
 export interface LevelSelectorProps {
