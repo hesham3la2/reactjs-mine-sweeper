@@ -1,5 +1,5 @@
 import {LevelData, CellData} from '../interfaces';
-import {locToString, loopNeighbours, getCellValue} from '../helper';
+import {locToString, loopNeighbours, getCellValue} from '../../helper';
 
 export const newGame = (payload: LevelData): CellData[] => {
     const { numOfMines, numOfCols, numOfRows } = payload;

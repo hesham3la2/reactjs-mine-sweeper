@@ -1,5 +1,3 @@
-import { CellData } from "./interfaces";
-
 export const locToString = (x: number, y: number) => `${x}-${y}`;
 export const stringToLoc = (id: string) => id.split('-').map((i) => +i);
 export const getCellValue = (arr: string[], value: string) => {
@@ -56,5 +54,3 @@ export const loopNeighbours = (
 
   return neighbours;
 };
-
-

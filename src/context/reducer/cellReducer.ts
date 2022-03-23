@@ -1,5 +1,5 @@
 import { CellData, State } from '../interfaces';
-import { loopNeighbours, stringToLoc } from '../helper';
+import { loopNeighbours, stringToLoc } from '../../helper';
 import { GameStatus } from '../enums';
 
 export const toogleFlag = (state: State, payload: string): State => {
