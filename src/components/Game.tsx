@@ -89,7 +89,7 @@ console.log(scrollable);
   return (
     <div
       className="container"
-      style={scrollable ? { width: '93%', height: '93%' } : {}}
+      style={scrollable ? { width: '93%' } : {}}
     >
       <div style={{ display: 'flex', justifyContent: 'space-evenly' }}>
         <LevelSelector onChange={handleChange} level={level.name} />
